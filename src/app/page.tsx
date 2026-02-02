@@ -50,6 +50,20 @@ type StatusMessage = {
   message: string;
 };
 
+type AgentLog = {
+  step: number;
+  action: string;
+  reason: string;
+  success: boolean;
+};
+
+type AgentState = {
+  running: boolean;
+  logs: AgentLog[];
+  completed: boolean;
+  error: string | null;
+};
+
 // ============ CONFIGURACIÓN DE HERRAMIENTAS ============
 
 const TOOLS = [
@@ -174,6 +188,52 @@ function ImageUploader({
 }
 
 function MenuResult({ data }: { data: MenuResponse }) {
+  const [agentState, setAgentState] = useState<AgentState>({
+    running: false,
+    logs: [],
+    completed: false,
+    error: null,
+  });
+
+  const handleMercadonaAgent = async () => {
+    if (data.lista_compra.length === 0) return;
+
+    setAgentState({
+      running: true,
+      logs: [],
+      completed: false,
+      error: null,
+    });
+
+    try {
+      const response = await fetch("/api/agent/mercadona", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productos: data.lista_compra }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error ejecutando el agente");
+      }
+
+      setAgentState({
+        running: false,
+        logs: result.logs || [],
+        completed: result.success,
+        error: result.success ? null : result.message,
+      });
+    } catch (error) {
+      setAgentState({
+        running: false,
+        logs: [],
+        completed: false,
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -246,6 +306,76 @@ function MenuResult({ data }: { data: MenuResponse }) {
         </div>
       </div>
 
+      {/* BOTÓN AGENTE MERCADONA */}
+      {data.lista_compra.length > 0 && (
+        <div className="rounded-2xl border border-[#85c440]/30 bg-gradient-to-r from-[#85c440]/10 to-[#5a9e1f]/10 px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🤖</span>
+              <div>
+                <p className="font-semibold text-[#2d5a2d]">Agente IA de Compra</p>
+                <p className="text-xs text-[#5a8a5a]">
+                  Automatiza tu compra en Mercadona con IA
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleMercadonaAgent}
+              disabled={agentState.running}
+              className="inline-flex items-center gap-2 rounded-full bg-[#85c440] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#5a9e1f] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {agentState.running ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Ejecutando...
+                </>
+              ) : (
+                <>
+                  <span>🛒</span>
+                  Comprar en Mercadona
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Logs del agente */}
+          {agentState.logs.length > 0 && (
+            <div className="mt-4 max-h-48 overflow-y-auto rounded-xl border border-[#85c440]/20 bg-white/80 p-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#5a8a5a]">
+                📋 Log del Agente
+              </p>
+              <div className="space-y-1 font-mono text-xs">
+                {agentState.logs.map((log, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-start gap-2 ${
+                      log.success ? "text-[#2d5a2d]" : "text-[#8a2d2d]"
+                    }`}
+                  >
+                    <span>{log.success ? "✓" : "✗"}</span>
+                    <span className="text-[#6b5b45]">#{log.step}</span>
+                    <span className="flex-1">{log.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Estado final */}
+          {agentState.completed && (
+            <div className="mt-3 rounded-xl border border-[#c4e0c4] bg-[#f0f9f0] px-3 py-2 text-sm text-[#2d5a2d]">
+              ✅ ¡Productos añadidos al carrito! Revisa el navegador para completar la compra.
+            </div>
+          )}
+
+          {agentState.error && !agentState.running && (
+            <div className="mt-3 rounded-xl border border-[#e0c4c4] bg-[#fff5f5] px-3 py-2 text-sm text-[#8a2d2d]">
+              ⚠️ {agentState.error}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 rounded-2xl border border-[#d4e8d4] bg-[#f0f9f0] px-4 py-3 text-sm text-[#2d5a2d]">
         <span>⏱</span>
         <span>Tiempo estimado: <strong>{data.tiempo_estimado_min} minutos</strong></span>
@@ -255,6 +385,52 @@ function MenuResult({ data }: { data: MenuResponse }) {
 }
 
 function ShoppingResult({ data }: { data: ShoppingResponse }) {
+  const [agentState, setAgentState] = useState<AgentState>({
+    running: false,
+    logs: [],
+    completed: false,
+    error: null,
+  });
+
+  const handleMercadonaAgent = async () => {
+    if (data.te_falta.length === 0) return;
+
+    setAgentState({
+      running: true,
+      logs: [],
+      completed: false,
+      error: null,
+    });
+
+    try {
+      const response = await fetch("/api/agent/mercadona", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productos: data.te_falta }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error ejecutando el agente");
+      }
+
+      setAgentState({
+        running: false,
+        logs: result.logs || [],
+        completed: result.success,
+        error: result.success ? null : result.message,
+      });
+    } catch (error) {
+      setAgentState({
+        running: false,
+        logs: [],
+        completed: false,
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-2xl border border-[#d4e8f0] bg-[#f0f8ff] px-4 py-3">
@@ -298,6 +474,76 @@ function ShoppingResult({ data }: { data: ShoppingResponse }) {
           </div>
         </div>
       </div>
+
+      {/* BOTÓN AGENTE MERCADONA */}
+      {data.te_falta.length > 0 && (
+        <div className="rounded-2xl border border-[#85c440]/30 bg-gradient-to-r from-[#85c440]/10 to-[#5a9e1f]/10 px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🤖</span>
+              <div>
+                <p className="font-semibold text-[#2d5a2d]">Agente IA de Compra</p>
+                <p className="text-xs text-[#5a8a5a]">
+                  Automatiza tu compra en Mercadona con IA
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleMercadonaAgent}
+              disabled={agentState.running}
+              className="inline-flex items-center gap-2 rounded-full bg-[#85c440] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#5a9e1f] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {agentState.running ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Ejecutando...
+                </>
+              ) : (
+                <>
+                  <span>🛒</span>
+                  Comprar en Mercadona
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Logs del agente */}
+          {agentState.logs.length > 0 && (
+            <div className="mt-4 max-h-48 overflow-y-auto rounded-xl border border-[#85c440]/20 bg-white/80 p-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#5a8a5a]">
+                📋 Log del Agente
+              </p>
+              <div className="space-y-1 font-mono text-xs">
+                {agentState.logs.map((log, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-start gap-2 ${
+                      log.success ? "text-[#2d5a2d]" : "text-[#8a2d2d]"
+                    }`}
+                  >
+                    <span>{log.success ? "✓" : "✗"}</span>
+                    <span className="text-[#6b5b45]">#{log.step}</span>
+                    <span className="flex-1">{log.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Estado final */}
+          {agentState.completed && (
+            <div className="mt-3 rounded-xl border border-[#c4e0c4] bg-[#f0f9f0] px-3 py-2 text-sm text-[#2d5a2d]">
+              ✅ ¡Productos añadidos al carrito! Revisa el navegador para completar la compra.
+            </div>
+          )}
+
+          {agentState.error && !agentState.running && (
+            <div className="mt-3 rounded-xl border border-[#e0c4c4] bg-[#fff5f5] px-3 py-2 text-sm text-[#8a2d2d]">
+              ⚠️ {agentState.error}
+            </div>
+          )}
+        </div>
+      )}
 
       {data.sugerencias_sustitucion.length > 0 && (
         <div className="rounded-2xl border border-[#f1dfc2] bg-[#fff9ee] px-4 py-3">
