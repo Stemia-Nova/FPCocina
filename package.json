@@ -11,14 +11,15 @@
   "dependencies": {
     "next": "16.1.6",
     "openai": "^6.17.0",
+    "puppeteer": "^24.36.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "postcss": "^8.4.31",

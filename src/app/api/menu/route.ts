@@ -46,7 +46,7 @@ const MOCK_MENU: MenuResponse = {
   tiempo_estimado_min: 35,
 };
 
-const MODEL = "gpt-4.1-mini";
+const MODEL = "gpt-4o-mini";
 const USE_MOCK = (process.env.USE_MOCK ?? "false").toLowerCase() === "true";
 
 const openai = new OpenAI({

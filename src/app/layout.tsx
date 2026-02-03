@@ -15,9 +15,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Menú desde tu nevera",
+  title: "Chef Tools · FP Cocina",
   description:
-    "Sube una foto de tu nevera y genera un menú con IA en segundos.",
+    "Multiherramienta con IA para estudiantes de FP de Cocina. Genera menús, listas de compra e inspiración culinaria.",
 };
 
 export default function RootLayout({
